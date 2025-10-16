@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>道具交换系统</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; }
+    label { display: block; margin-top: 10px; }
+    select, input, button { margin-top: 5px; padding: 5px; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    .缺少 { background-color: #fdd; }
+    .多余 { background-color: #dfd; }
+  </style>
+</head>
+<body>
+  <h1>道具交换系统</h1>
+  <form id="itemForm">
+    <label>玩家ID: <input type="text" id="playerId" required></label>
+    <label>道具选择:
+      <select id="itemName"></select>
+    </label>
+    <label>数量: <input type="number" id="itemCount" required></label>
+    <button type="submit">提交</button>
+  </form>
+
+  <h2>玩家道具列表</h2>
+  <table id="itemsTable">
+    <thead>
+      <tr>
+        <th>玩家ID</th>
+        <th>道具</th>
+        <th>数量</th>
+        <th>状态</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>交换建议</h2>
+  <ul id="suggestions"></ul>
+
+  <script>
+    // 模拟 Excel 转换后的 JSON 数据
+    const items = {
+      "咖啡与工作": ["崭新咖啡机","不苦咖啡","不像杯子","点单机"],
+      "与夜梦眠": ["甜梦兔兔","独角兽趴趴","幽灵睡衣","阿困特困"],
+      "清晨愈梦": ["清晨花篮","晨露花环","用不坏水壶"]
+    };
+
+    const itemSelect = document.getElementById('itemName');
+    for (const category in items) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = category;
+      items[category].forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        optgroup.appendChild(option);
+      });
+      itemSelect.appendChild(optgroup);
+    }
+
+    const form = document.getElementById('itemForm');
+    const tableBody = document.querySelector('#itemsTable tbody');
+    const suggestionsList = document.getElementById('suggestions');
+    const data = [];
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const playerId = document.getElementById('playerId').value;
+      const itemName = document.getElementById('itemName').value;
+      const itemCount = parseInt(document.getElementById('itemCount').value, 10);
+
+      let status = "正常";
+      if (itemCount === 0) status = "缺少";
+      if (itemCount >= 2) status = "多余";
+
+      data.push({ playerId, itemName, itemCount, status });
+
+      const row = document.createElement('tr');
+      row.className = status;
+      row.innerHTML = `<td>${playerId}</td><td>${itemName}</td><td>${itemCount}</td><td>${status}</td>`;
+      tableBody.appendChild(row);
+
+      updateSuggestions();
+      form.reset();
+    });
+
+    function updateSuggestions() {
+      suggestionsList.innerHTML = "";
+      const缺少 = data.filter(d => d.status === "缺少");
+      const多余 = data.filter(d => d.status === "多余");
+
+      缺少.forEach(missing => {
+        多余.forEach(extra => {
+          if (missing.itemName === extra.itemName && missing.playerId !== extra.playerId) {
+            const li = document.createElement('li');
+            li.textContent = `玩家 ${missing.playerId} 缺少【${missing.itemName}】，可以向玩家 ${extra.playerId} 交换`;
+            suggestionsList.appendChild(li);
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>
